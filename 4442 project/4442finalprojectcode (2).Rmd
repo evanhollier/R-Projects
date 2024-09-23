@@ -1,0 +1,241 @@
+---
+title: "regression_tree"
+output: word_document
+date: "2023-05-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+
+
+
+```{r}
+
+#library(rpart)       # performing regression trees
+
+
+# Load the package
+library(rpart)
+#install.packages("rpart.plot")
+library(rpart.plot)
+
+airline_data <- as.data.frame(airline_data)
+
+
+fit <- rpart(satisfaction_binary ~ Age + `Seat comfort` + `Flight Distance` + `Cleanliness` + `Online boarding` + `Class` + `Inflight wifi service`, data = airline_data)
+
+
+# Print the resulting tree
+print(fit)
+
+# Plot the resulting tree
+rpart.plot(fit)
+
+
+
+```
+
+
+
+
+# ALL Files
+
+
+```{r}
+library(dplyr)
+library(readr)
+
+# List of unique file paths
+unique_paths <- c("C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_device\\desktop.csv", 
+             "C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_device\\mobile.csv", 
+             "C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_device\\tablet.csv", 
+             "C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_source\\direct.csv", 
+             "C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_source\\display.csv", 
+             "C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_source\\email.csv", 
+             "C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_source\\organic_search.csv",
+             "C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_source\\paid_search.csv",
+             "C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_source\\referral.csv",
+             "C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_source\\social.csv")
+
+# Initialize an empty data frame
+merged_df <- data.frame()
+
+# Loop through each unique file path
+for (unique_path in unique_paths) {
+  # Read the CSV file
+  unique_df <- read_csv(unique_path)
+  
+  # Append it to the merged data frame
+  merged_df <- bind_rows(merged_df, unique_df)
+}
+
+print("Files loaded, column renamed, and data concatenated successfully!")
+
+
+```
+
+
+
+
+```{r}
+library(dplyr)
+library(readr)
+
+# List of device file paths
+device_paths <- c("C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_device\\desktop.csv", 
+             "C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_device\\mobile.csv", 
+             "C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_device\\tablet.csv")
+
+# Initialize an empty data frame
+device_df <- data.frame()
+
+# Loop through each device file
+for (device_path in device_paths) {
+  # Read the CSV file
+  temp_df <- read_csv(device_path)
+  
+  # Append it to the device data frame
+  device_df <- bind_rows(device_df, temp_df)
+}
+
+print("Device files loaded and data concatenated successfully!")
+
+```
+
+
+
+
+```{r warning=FALSE}
+library(dplyr)
+library(readr)
+
+# List of source file paths
+source_paths <- c("C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_source\\direct.csv", 
+             "C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_source\\display.csv", 
+             "C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_source\\email.csv", 
+             "C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_source\\organic_search.csv",
+             "C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_source\\paid_search.csv",
+             "C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_source\\referral.csv",
+             "C:\\Users\\sebsl\\OneDrive\\Documents\\COMP3006spring\\project\\by_source\\social.csv")
+
+# Initialize an empty data frame
+source_df <- data.frame()
+
+# Loop through each source file
+for (source_path in source_paths) {
+  # Read the CSV file
+  temp_df <- read_csv(source_path)
+  
+  # Append it to the source data frame
+  source_df <- bind_rows(source_df, temp_df)
+}
+
+print("Source files loaded and data concatenated successfully!")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+# Load the necessary libraries
+library(rpart)
+library(rpart.plot)
+
+# Ensure the dataframes are data frames
+merged_df <- as.data.frame(merged_df)
+device_df <- as.data.frame(device_df)
+source_df <- as.data.frame(source_df)
+
+# Fit the regression tree model for merged_df
+fit_merged <- rpart(Grad_Apply ~ `Avg_Duration`, data = merged_df)
+# Print the resulting tree
+print(fit_merged)
+# Plot the resulting tree
+rpart.plot(fit_merged)
+
+# Prune the tree
+fit_merged_pruned <- prune(fit_merged, cp = fit_merged$cptable[which.min(fit_merged$cptable[,"xerror"]),"CP"])
+# Print the resulting tree
+print(fit_merged_pruned)
+# Plot the resulting tree
+rpart.plot(fit_merged_pruned)
+
+# Fit the regression tree model for device_df
+fit_device <- rpart(Grad_Apply ~ `Device` + `Avg_Duration`, data = device_df)
+# Print the resulting tree
+print(fit_device)
+# Plot the resulting tree
+rpart.plot(fit_device)
+
+# Fit the regression tree model for source_df
+fit_source <- rpart(Grad_Apply ~ `Source` + `Avg_Duration` , data = source_df)
+# Print the resulting tree
+print(fit_source)
+# Plot the resulting tree
+rpart.plot(fit_source)
+
+
+```
+```{r}
+# Load the necessary libraries
+library(rpart)
+library(rpart.plot)
+
+# Ensure final_df is a data frame
+final_df <- as.data.frame(final_df)
+
+# Fit the regression tree model
+fit <- rpart(Grad_Apply ~ `Source` + `Avg_Duration` , data = final_df)
+
+# Print the resulting tree
+print(fit)
+
+# Plot the resulting tree
+rpart.plot(fit)
+```
+```{r}
+# Fit the regression tree model for device_df
+fit_device <- rpart(Grad_Apply ~ `Device` * `Avg_Duration`, data = device_df)
+# Print the resulting tree
+print(fit_device)
+# Plot the resulting tree
+rpart.plot(fit_device)
+```
+

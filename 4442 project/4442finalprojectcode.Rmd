@@ -1,0 +1,236 @@
+---
+title: "regression_tree"
+output: word_document
+date: "2023-05-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+#library(rpart)       # performing regression trees
+
+
+# Load the package
+library(rpart)
+#install.packages("rpart.plot")
+library(rpart.plot)
+
+```
+
+
+
+
+# ALL Files
+
+
+```{r message=FALSE}
+library(dplyr)
+library(readr)
+
+# List of unique file paths
+unique_paths <- c("C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_device\\desktop.csv", 
+             "C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_device\\mobile.csv", 
+             "C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_device\\tablet.csv", 
+             "C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_source\\direct.csv", 
+             "C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_source\\display.csv", 
+             "C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_source\\email.csv", 
+             "C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_source\\organic_search.csv",
+             "C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_source\\paid_search.csv",
+             "C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_source\\referral.csv",
+             "C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_source\\social.csv")
+
+# Initialize an empty data frame
+merged_df <- data.frame()
+
+# Loop through each unique file path
+for (unique_path in unique_paths) {
+  # Read the CSV file
+  unique_df <- read_csv(unique_path)
+  
+  # Append it to the merged data frame
+  merged_df <- bind_rows(merged_df, unique_df)
+}
+
+print("Files loaded, column renamed, and data concatenated successfully!")
+
+
+library(dplyr)
+library(readr)
+
+# List of device file paths
+device_paths <- c("C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_device\\desktop.csv",
+             "C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_device\\mobile.csv", 
+             "C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_device\\tablet.csv")
+
+# Initialize an empty data frame
+device_df <- data.frame()
+
+# Loop through each device file
+for (device_path in device_paths) {
+  # Read the CSV file
+  temp_df <- read_csv(device_path)
+  
+  # Append it to the device data frame
+  device_df <- bind_rows(device_df, temp_df)
+}
+
+print("Device files loaded and data concatenated successfully!")
+
+
+
+library(dplyr)
+library(readr)
+
+# List of source file paths
+source_paths <- c("C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_source\\direct.csv", 
+             "C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_source\\display.csv", 
+             "C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_source\\email.csv", 
+             "C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_source\\organic_search.csv",
+             "C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_source\\paid_search.csv",
+             "C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_source\\referral.csv",
+             "C:\\Users\\Evan\\Desktop\\School\\4442\\project\\by_source\\social.csv")
+
+# Initialize an empty data frame
+source_df <- data.frame()
+
+# Loop through each source file
+for (source_path in source_paths) {
+  # Read the CSV file
+  temp_df <- read_csv(source_path)
+  
+  # Append it to the source data frame
+  source_df <- bind_rows(source_df, temp_df)
+}
+
+print("Source files loaded and data concatenated successfully!")
+
+```
+
+```{r}
+# Convert grad apply to a percentage of sessions
+merged_df$Grad_Apply_count <- merged_df$Grad_Apply
+merged_df$Grad_Apply <- merged_df$Grad_Apply_count / merged_df$Sessions
+merged_df$Grad_Apply <- merged_df$Grad_Apply * 100
+device_df$Grad_Apply_count <- device_df$Grad_Apply
+device_df$Grad_Apply <- device_df$Grad_Apply_count / device_df$Sessions
+device_df$Grad_Apply <- device_df$Grad_Apply * 100
+source_df$Grad_Apply_count <- source_df$Grad_Apply
+source_df$Grad_Apply <- source_df$Grad_Apply_count / source_df$Sessions
+source_df$Grad_Apply <- source_df$Grad_Apply * 100
+```
+
+
+```{r}
+merged_df$TimeInSeconds <- sapply(merged_df$Avg_Duration, function(x) {
+  time <- strptime(x, format = "%H:%M:%S")
+  total_seconds <- as.integer(format(time, format = "%H")) * 3600 +
+                   as.integer(format(time, format = "%M")) * 60 +
+                   as.integer(format(time, format = "%S"))
+  return(total_seconds)
+})
+
+merged_poisson<-glm(Grad_Apply_count~TimeInSeconds,data=merged_df,family="poisson")
+summary(merged_poisson)
+```
+```{r}
+merged_poisson<-glm(Grad_Apply~Avg_Duration,data=merged_df,family="poisson")
+summary(merged_poisson)
+```
+
+```{r}
+# Load the necessary libraries
+library(rpart)
+library(rpart.plot)
+
+# Ensure the dataframes are data frames
+merged_df <- as.data.frame(merged_df)
+device_df <- as.data.frame(device_df)
+source_df <- as.data.frame(source_df)
+
+
+# Fit the regression tree model for merged_df
+fit_merged <- rpart(Grad_Apply ~ `Avg_Duration`, data = merged_df)
+# Print the resulting tree
+print(fit_merged)
+# Plot the resulting tree
+rpart.plot(fit_merged, main="Grad_Apply ~ Avg_Duration")
+
+# Prune the tree
+fit_merged_pruned <- prune(fit_merged, cp = fit_merged$cptable[which.min(fit_merged$cptable[,"xerror"]),"CP"])
+# Print the resulting tree
+print(fit_merged_pruned)
+# Plot the resulting tree
+rpart.plot(fit_merged_pruned, main="Pruned\nGrad_Apply ~ Avg_Duration")
+
+# Fit the regression tree model for device_df
+fit_device <- rpart(Grad_Apply ~ `Device` + `Avg_Duration`, data = device_df)
+# Print the resulting tree
+print(fit_device)
+# Plot the resulting tree
+rpart.plot(fit_device, main="Grad_Apply ~ Device + Avg_Duration")
+
+# Fit the regression tree model for source_df
+fit_source <- rpart(Grad_Apply ~ `Source` + `Avg_Duration` , data = source_df)
+# Print the resulting tree
+print(fit_source)
+# Plot the resulting tree
+rpart.plot(fit_source, main="Grad_Apply ~ Source + Avg_Duration")
+
+
+```
+
+
+
+```{r}
+#fit_merged_pruned$variable.importance
+
+fit_device$variable.importance
+fit_source$variable.importance
+```
+```{r}
+splits = c(0,45,122,131,143,180,363)
+
+
+library(scales)
+
+p <- ggplot(merged_df, aes(x = Avg_Duration, y = Grad_Apply)) +
+  geom_point(color="orange") +
+  geom_vline(xintercept = splits, linetype = "dashed", color = "darkgreen") +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(breaks = splits, labels = splits) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
+  geom_text(data = data.frame(x = c(22.5, 83.5, 125, 137, 161.5, 271.5),
+                              y = c(400, 400, 400, 380, 400, 400),
+                              l = c(1.2, 35, 136, 44, 134, 42)),
+            aes(x = x, y = l, label = l), angle=0, vjust = -0.5, color="black") +
+  labs(title = "Pruned Tree Splits\nGrad_Apply ~ Avg_Duration") 
+
+x_values <- c(0, 45, 122, 131, 143, 180, 363)
+y_values <- c(1.2, 35, 136, 44, 134, 42)
+
+segments_df <- data.frame(x = c(0, 45, 122, 131, 143, 180),
+                          y = c(1.2, 35, 136, 44, 134, 42),
+                          xend = c(45, 122, 131, 143, 180, 363),
+                          yend = c(1.2, 35, 136, 44, 134, 42))
+
+# Populate the segments data frame
+for (i in 1:(length(x_values)-1)) {
+  segments_df[i, "x"] <- x_values[i]
+  segments_df[i, "y"] <- y_values[i]
+  segments_df[i, "xend"] <- x_values[i+1]
+  segments_df[i, "yend"] <- y_values[i]
+}
+
+p <- p + geom_segment(data = segments_df,
+                 aes(x = x, y = y, xend = xend, yend = yend),
+                 color = "black", linetype = "solid")
+
+p
+
+```
+
+
