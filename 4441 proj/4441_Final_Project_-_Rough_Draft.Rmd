@@ -1,0 +1,92 @@
+---
+title: "4441 Final Project - Rough Draft"
+author: "Josef Triman"
+date: "2023-03-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(betareg)
+library(lmtest)
+library(ggplot2)
+library(ggpubr)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r setup}
+dat<-read.csv("grad_apply.csv")
+```
+
+
+
+
+
+
+
+
+
+ 
+
+##Check the data frame
+
+```{r}
+str(dat)
+summary(dat)
+dat <- dat[dat$Grad.Apply != 0,]
+dat$Proportions <- dat$Grad.Apply / dat$Sessions
+dat <- dat[, c("Proportions", "Sessions")]
+dat
+```
+
+
+##Assumptions of a beta regression. 
+```{r}
+
+library(fitdistrplus)
+library(MASS)
+
+```
+
+## Running a Beta Regression and interpreting the results.
+
+In a beta regression test, you are typically interested in determining whether there is a significant relationship between the predictor variables and the response variable. The following values can be examined to assess the significance of the beta regression:
+
+p-value: The p-value measures the probability of observing a test statistic as extreme as the one computed from the sample data, assuming that the null hypothesis is true. In a beta regression, the null hypothesis is that the predictors have no effect on the response variable. A small p-value (typically less than 0.05) suggests that the null hypothesis can be rejected, and there is evidence of a significant relationship between the predictors and the response variable.
+
+Confidence intervals: The confidence intervals can provide a range of plausible values for the effect size of the predictor variables on the response variable. If the confidence intervals do not contain zero, this suggests that the predictor variables have a statistically significant effect on the response variable.
+
+R-squared or pseudo R-squared: These statistics indicate the proportion of variation in the response variable that can be explained by the predictor variables. A high R-squared value (close to 1) suggests that the predictor variables are able to explain a significant amount of variation in the response variable, indicating a good fit of the model.
+
+In summary, when performing a beta regression, you would typically look for a small p-value, confidence intervals that do not contain zero, and a high R-squared or pseudo R-squared value to determine if the relationship between predictor variables and response variable is significant.
+```{r}
+model.beta <- betareg(Proportions ~ Sessions, data=dat)
+lrtest(model.beta)
+summary(model.beta)
+plot(fitted(model.beta),
+     residuals(model.beta))
+plot(model.beta)
+predictions <- predict(model.beta, type="response")
+df <- data.frame(Sessions = dat$Sessions, predicted_Sessions = predictions)
+ggplot(dat, aes(x = Sessions, y = Proportions)) + 
+  geom_point() + 
+  geom_smooth(method="glm", method.args=list(family="beta"), se=FALSE) +
+  geom_line(data = df, aes(x = Sessions, y = predicted_Sessions), color="red", size=1)
+
+# data <- read.csv("data.csv")
+# model <- betareg(response ~ predictor, data)
+# predictions <- predict(model, type="response")
+# df <- data.frame(predictor = data$predictor, predicted_response = predictions)
+# ggplot(data, aes(x = predictor, y = response)) + 
+#   geom_point() + 
+#   geom_smooth(method="glm", method.args=list(family="beta"), se=FALSE) +
+#   geom_line(data = df, aes(x = predictor, y = predicted_response), color="red", size=1)
+ggqqplot(residuals(model.beta))
+```
+
+

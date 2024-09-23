@@ -1,0 +1,11 @@
+Team:
+Josef Triman, Evan Hollier
+
+Method:
+Beta Regression
+- every page on the site has its share of site traffic as a percentage of the site's total for each statistic
+
+Data:
+Google Analytics from Daniels College of Business site
+- site traffic (unique visitors, avg time on page, etc.)
+- basic demographic/usage data (location, operating system, etc.)
